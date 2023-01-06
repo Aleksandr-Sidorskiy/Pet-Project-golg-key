@@ -1,3 +1,4 @@
+// import { deleteAsync } from "del";
 let project_folder = "dist";
 let source_folder = "#src";
 
@@ -27,8 +28,11 @@ let path = {
 
 let { src, dest } = require("gulp"),
   gulp = require("gulp"),
-  browserSync = require("browser-sync").create();
-fileinclude = require("gulp-file-include");
+  browserSync = require("browser-sync").create(),
+  fileinclude = require("gulp-file-include"),
+  scss = require("gulp-sass")(require("sass"));
+// del = require("del");
+// const scss = require("gulp-sass")(require("sass"));
 
 function browserSyncFun() {
   browserSync.init({
@@ -47,21 +51,29 @@ function html() {
     .pipe(browserSync.stream());
 }
 
+function css() {
+  return src(path.src.css)
+    .pipe(
+      scss({
+        outputStyle: "expanded",
+      })
+    )
+    .pipe(dest(path.build.css))
+    .pipe(browserSync.stream());
+}
+
 function watchFile() {
   gulp.watch([path.watch.html], html);
 }
+function clean() {
+  return del(path.clean);
+}
 
-// function css() {
-//   return src(path.src.css)
-//     .pipe(dest(path.build.css))
-//     .pipe(browserSync.stream());
-// }
-
-let build = gulp.series(html);
+let build = gulp.series(gulp.parallel(css, html));
 let watch = gulp.parallel(build, watchFile, browserSyncFun);
 
+exports.css = css;
 exports.html = html;
-// exports.css = css;
 exports.build = build;
 exports.watch = watch;
 exports.default = watch;
